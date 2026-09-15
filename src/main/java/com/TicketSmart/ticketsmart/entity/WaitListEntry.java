@@ -1,19 +1,19 @@
 package com.TicketSmart.ticketsmart.entity;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "reservations")
+@Table(name = "waitlist_entries")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class Reservation {
+public class WaitListEntry {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -26,19 +26,12 @@ public class Reservation {
 	@JoinColumn(name = "user_id", nullable = false)
 	private User user;
 
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false)
-	private ReservationStatus status; // (PENDING/CONFIRMED/EXPIRED/CANCELLED)
-
 	@Column(nullable = false, updatable = false)
-	private LocalDateTime CreatedAt;
+	private LocalDateTime joinedAt;
 
-	@Column(nullable = false)
-	private BigDecimal lockedPrice;
-	
 	@PrePersist
 	protected void onCreate() {
-		this.CreatedAt = LocalDateTime.now();
+		this.joinedAt = LocalDateTime.now();
 	}
-}
 
+}
