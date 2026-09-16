@@ -10,6 +10,6 @@ import com.TicketSmart.ticketsmart.entity.User;
 @Repository
 public interface UserRepository extends JpaRepository<User,Long> {
 
-	Optional<User> findByEmail(String email);
-	boolean existsByEmail(String email);
+	Optional<User> findByEmail(String email); //for login
+	boolean existsByEmail(String email);	//for register
 }

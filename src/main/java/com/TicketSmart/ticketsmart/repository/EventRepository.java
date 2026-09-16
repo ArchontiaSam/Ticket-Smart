@@ -11,5 +11,5 @@ import com.TicketSmart.ticketsmart.entity.User;
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
 
-	List<Event> findByHost(User host);
+	List<Event> findByHost(User host);	//locate event by host
 }

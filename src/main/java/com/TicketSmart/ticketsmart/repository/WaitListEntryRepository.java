@@ -10,8 +10,8 @@ import com.TicketSmart.ticketsmart.entity.WaitListEntry;
 @Repository
 public interface WaitListEntryRepository extends JpaRepository<WaitListEntry, Long> {
 
-	List<WaitListEntry> findByEventId(Long eventId);
+	List<WaitListEntry> findByEventId(Long eventId); //from each event to locate users that are waiting and be able to calculate their score 
 
-	void deleteByIdAndUserId(Long eventId, Long userId);
+	void deleteByIdAndUserId(Long eventId, Long userId); //delete user from waitListEntry when he actually takes a ticket
 
 }

@@ -13,7 +13,7 @@ import com.TicketSmart.ticketsmart.entity.Friendship;
 public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
 
 	@Query("SELECT f FROM Friendship f WHERE f.userA.id = :userId OR f.userB.id = :userId")
-	List<Friendship> findAllByUserId(@Param("userId") Long userId);
+	List<Friendship> findAllByUserId(@Param("userId") Long userId); //locate user friends
 
 	//List<Friendship> findAll();
 }
