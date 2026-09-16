@@ -29,10 +29,10 @@ public class Event {
 	private LocalDateTime time;
 
 	@Column(nullable = false)
-	private Long totalTickets;
+	private Integer totalTickets;
 
 	@Column(nullable = false)
-	private Long availiableTickets;
+	private Integer availableTickets;
 
 	@Column(nullable = false)
 	private BigDecimal basePrice;

@@ -18,7 +18,7 @@ public class ReservationResponseDTO {
 	private Long userId;
 	private String userName;
 	private Long eventId;  		//return all essential info instead of returning Reservation entity (which consists of User,Event objects) for safety. 
-	private Long eventName;
+	private String eventName;
 	private ReservationStatus status;
 	private LocalDateTime createdAt;
 	private BigDecimal lockedPrice;
