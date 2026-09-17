@@ -18,6 +18,11 @@ public class UserService {
 
 	@Transactional
 	public UserDTO createUser(UserDTO dto) {
+
+		if (userRepository.existsByEmail(dto.getEmail())) {
+			throw new RuntimeException("Email already in use: " + dto.getEmail());
+		}
+
 		User user = new User();
 		user.setName(dto.getName());
 		user.setEmail(dto.getEmail());
