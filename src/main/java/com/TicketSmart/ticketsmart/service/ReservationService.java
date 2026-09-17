@@ -17,6 +17,7 @@ import com.TicketSmart.ticketsmart.entity.User;
 import com.TicketSmart.ticketsmart.repository.EventRepository;
 import com.TicketSmart.ticketsmart.repository.ReservationRepository;
 import com.TicketSmart.ticketsmart.repository.UserRepository;
+import com.TicketSmart.ticketsmart.service.pricing.PricingStrategy;
 
 @Service
 public class ReservationService {
@@ -24,13 +25,15 @@ public class ReservationService {
 	private final ReservationRepository reservationRepository;
 	private final EventRepository eventRepository;
 	private final UserRepository userRepository;
+	private final PricingStrategy pricingStrategy;
 
 	// constructor
 	public ReservationService(ReservationRepository reservationRepository, EventRepository eventRepository,
-			UserRepository userRepository) {
+			UserRepository userRepository, PricingStrategy pricingStrategy) {
 		this.reservationRepository = reservationRepository;
 		this.eventRepository = eventRepository;
 		this.userRepository = userRepository;
+		this.pricingStrategy = pricingStrategy;
 
 	}
 
@@ -50,12 +53,17 @@ public class ReservationService {
 		if (updateRows == 0)
 			throw new RuntimeException("No tickets available for this event.");
 
+		//load again from db to locate  new availableTIckets
+		event = eventRepository.findById(event.getId())
+		        .orElseThrow(() -> new RuntimeException("Event not found after reservation"));
+
+		
 		// when there are tickets available, create one
 		Reservation reservation = new Reservation();
 		reservation.setUser(user);
 		reservation.setEvent(event);
 		reservation.setStatus(ReservationStatus.PENDING);
-		reservation.setLockedPrice(event.getBasePrice()); // TODO: add price strategy to calculate prices
+		reservation.setLockedPrice(pricingStrategy.calculatePrice(event));
 
 		// save reservation
 		Reservation saved = reservationRepository.save(reservation);
