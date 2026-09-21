@@ -14,6 +14,7 @@ import com.TicketSmart.ticketsmart.entity.Event;
 import com.TicketSmart.ticketsmart.entity.Reservation;
 import com.TicketSmart.ticketsmart.entity.ReservationStatus;
 import com.TicketSmart.ticketsmart.entity.User;
+import com.TicketSmart.ticketsmart.entity.WaitListEntry;
 import com.TicketSmart.ticketsmart.repository.EventRepository;
 import com.TicketSmart.ticketsmart.repository.ReservationRepository;
 import com.TicketSmart.ticketsmart.repository.UserRepository;
@@ -26,14 +27,16 @@ public class ReservationService {
 	private final EventRepository eventRepository;
 	private final UserRepository userRepository;
 	private final PricingStrategy pricingStrategy;
+	private final WaitListEntryService waitListEntryService;
 
 	// constructor
 	public ReservationService(ReservationRepository reservationRepository, EventRepository eventRepository,
-			UserRepository userRepository, PricingStrategy pricingStrategy) {
+			UserRepository userRepository, PricingStrategy pricingStrategy, WaitListEntryService waitListEntryService) {
 		this.reservationRepository = reservationRepository;
 		this.eventRepository = eventRepository;
 		this.userRepository = userRepository;
 		this.pricingStrategy = pricingStrategy;
+		this.waitListEntryService = waitListEntryService;
 
 	}
 
@@ -53,11 +56,10 @@ public class ReservationService {
 		if (updateRows == 0)
 			throw new RuntimeException("No tickets available for this event.");
 
-		//load again from db to locate  new availableTIckets
+		// load again from db to locate new availableTIckets
 		event = eventRepository.findById(event.getId())
-		        .orElseThrow(() -> new RuntimeException("Event not found after reservation"));
+				.orElseThrow(() -> new RuntimeException("Event not found after reservation"));
 
-		
 		// when there are tickets available, create one
 		Reservation reservation = new Reservation();
 		reservation.setUser(user);
@@ -85,11 +87,27 @@ public class ReservationService {
 
 			// return available tickets
 			Event event = reservation.getEvent();
-			event.setAvailableTickets(event.getAvailableTickets() + 1);
-			eventRepository.save(event);
 
-			// TODO: notify first users on waitList
+			// check if someone is in the waitList for this event
+			WaitListEntry next = waitListEntryService.getNextInLine(event.getId());
 
+			if (next != null) {
+				// Give ticket to first user waiting
+
+				Reservation promoted = new Reservation();
+				promoted.setUser(next.getUser());
+				promoted.setEvent(event);
+				promoted.setStatus(ReservationStatus.PENDING);
+				promoted.setLockedPrice(pricingStrategy.calculatePrice(event));
+
+				reservationRepository.save(promoted);
+
+				waitListEntryService.removeFromWaitList(next.getUser().getId(), event.getId());
+			} else {
+				// if no one is waiting return ticket to available
+				event.setAvailableTickets(event.getAvailableTickets() + 1);
+				eventRepository.save(event);
+			}
 		}
 
 		return expired.size();
@@ -109,6 +127,16 @@ public class ReservationService {
 		// after payment status changes and reservation is updated
 		reservation.setStatus(ReservationStatus.CONFIRMED);
 		Reservation updated = reservationRepository.save(reservation);
+
+		// when there are no more PENDING tickets, waitListEntry clears up due to users
+		// should not wait for something that does not exists
+		Event event = updated.getEvent();
+		boolean anyOtherPending = reservationRepository.findByEventId(event.getId()).stream()
+				.anyMatch(r -> r.getStatus() == ReservationStatus.PENDING);
+
+		if (event.getAvailableTickets() == 0 && !anyOtherPending) // zero tickets and no more PENDING
+			waitListEntryService.clearWaitListEntryNoMorePendingTickets(event.getId());
+
 		return toDTO(updated);
 	}
 
