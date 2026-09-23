@@ -1,5 +1,7 @@
 # TicketSmart
 
+**Note:** This is a backend-only project — there is no frontend UI. All endpoints can be explored and tested via **Swagger UI**.
+
 Backend ticketing management system built with **Spring Boot 3.3**, **Java 17**, and **PostgreSQL 16**, following a classic layered architecture (`Controller` → `Service` → `Repository` → `Entity`).
 
 ## Tech Stack
@@ -33,10 +35,11 @@ Controller  →  Service  →  Repository  →  PostgreSQL<br>
    ```sql
    UPDATE events SET available_tickets = available_tickets - 1 
    WHERE id = :eventId AND available_tickets > 0;
-1. Social Connectivity Check (isConnected via BFS): Bounded BFS over symmetric friendship adjacency list.<br>
-2. Priority Waitlist with FIFO Tie-Breaking: Score formula score = (wait seconds / 10) + (confirmed friends count * 20), sorted by score DESC then createdAt ASC.<br>
-3. Dynamic Pricing: +30% surge if available capacity drops below 10%, locked on reservation.<br>
-4. Expired Reservation Sweeper (@Scheduled): Moves overdue PENDING to EXPIRED and promotes top waitlist candidate or returns ticket to pool.<br>
+   ```
+2. **Social Connectivity Check** (isConnected via BFS): Bounded BFS over symmetric friendship adjacency list.<br>
+3. **Priority Waitlist with FIFO Tie-Breaking**: Score formula score = (wait seconds / 10) + (confirmed friends count * 20), sorted by score DESC then createdAt ASC.<br>
+4. **Dynamic Pricing**: +30% surge if available capacity drops below 10%, locked on reservation.<br>
+5. **Expired Reservation Sweeper** (@Scheduled): Moves overdue PENDING to EXPIRED and promotes top waitlist candidate or returns ticket to pool.<br>
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
@@ -59,18 +62,30 @@ Controller  →  Service  →  Repository  →  PostgreSQL<br>
 
 Swagger UI: http://localhost:8081/swagger-ui/index.html<br>
 
-Local Setup<br>
-1. Create DB: CREATE DATABASE ticketing_db;<br>
-2. Configure application.properties:<br>
-spring.datasource.url=jdbc:postgresql://localhost:5432/ticketing_db
-spring.datasource.username=postgres
-spring.datasource.password=your_password
-spring.jpa.hibernate.ddl-auto=update
-server.port=8081<br>
-3. Run: mvn spring-boot:run
+### Prerequisites
+- **Java 17+**
+- **Maven** (or use the included `mvnw` wrapper, if present)
+- **PostgreSQL 16** (running locally)
 
-Design Decisions & Trade-offs<br>
-* Atomic UPDATE vs Explicit Locks: Better throughput under high concurrency.<br>
-* Live Score Evaluation vs PriorityQueue: Avoids stale heap state on graph updates.<br>
-* Friend Bonus (+20): Balances social perks with FIFO fairness.<br>
-* Confirmed Lock Rule: Protects revenue; separate flow for refunds.
+## Local Setup<br>
+1. Clone the repository:
+```bash
+   git clone https://github.com/ArchontiaSam/TicketSmart.git
+   cd TicketSmart
+   ```
+2. Create DB:
+   ```sql
+   CREATE DATABASE ticketing_db;
+   ```
+3. Configure `application.properties`:
+   ```properties
+   spring.datasource.url=jdbc:postgresql://localhost:5432/ticketing_db
+   spring.datasource.username=postgres
+   spring.datasource.password=your_password
+   spring.jpa.hibernate.ddl-auto=update
+   server.port=8081
+   ```
+4. Run:
+   ```bash
+   mvn spring-boot:run
+   ```
